@@ -1,0 +1,22 @@
+<div class="post">
+  <div class="post-heading">
+    <div class="post-title">
+      {{p.subject}}
+    </div>
+
+    <div class="post-date">
+      {{p.created.strftime("%b %d, %Y")}}
+    </div>
+  </div>
+
+  <div class="post-content">
+    {{p._render_text | safe}}
+  </div>
+  <div class="post-edit">
+    <ul>
+      <li>{{likes}}<form method="post"><a class="like-button" role="button" name = "post_id" href="#" value = "{{p.key().id()}}">Like</a></form></li>
+      <li><a class="comment-button" role="button" href="#">Comment</a></li>
+      <li><a class="edit-button" role="button" href="#">Edit</a></li>
+    </ul>
+  </div>
+</div>

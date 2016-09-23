@@ -1,0 +1,86 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <title>Sign Up</title>
+    <style type="text/css">
+      .label {text-align: right}
+      .error {color: red}
+      div {background-color: #fff;
+      -webkit-box-shadow: 4px 4px 16px 1px rgba(0,0,0,0.75);
+-moz-box-shadow: 4px 4px 16px 1px rgba(0,0,0,0.75);
+box-shadow: 4px 4px 16px 1px rgba(0,0,0,0.75);
+width:500px;
+margin : auto;
+margin-top:150px;
+padding:50px}
+
+
+    </style>
+
+  </head>
+
+  <body>
+      <div>
+    <h2>Signup</h2>
+    <form method="post">
+      <table>
+        <tr>
+          <td class="label">
+            Username
+          </td>
+          <td>
+            <input type="text" name="username" value="">
+          </td>
+          <td class="error">
+            {{error_username}}
+          </td>
+        </tr>
+
+        <tr>
+          <td class="label">
+            Password
+          </td>
+          <td>
+            <input type="password" name="password" value="">
+          </td>
+          <td class="error">
+            {{error_password}}
+          </td>
+        </tr>
+
+        <tr>
+          <td class="label">
+            Verify Password
+          </td>
+          <td>
+            <input type="password" name="verify" value="">
+          </td>
+          <td class="error">
+            {{error_verify}}
+          </td>
+        </tr>
+
+        <tr>
+          <td class="label">
+            Email
+          </td>
+          <td>
+            <input type="text" name="email" value="">
+          </td>
+          <td class="error">
+            {{error_email}}
+          </td>
+        </tr>
+      </table>
+      <br>
+
+      <input type="submit" style="-webkit-box-shadow: -3px 4px 19px 1px rgba(0,0,0,0.75);
+-moz-box-shadow: -3px 4px 19px 1px rgba(0,0,0,0.75);
+box-shadow: -3px 4px 19px 1px rgba(0,0,0,0.75);background-color:#1c9fe6;border-radius:5px">
+    </form>
+    </div>
+  </body>
+
+</html>
