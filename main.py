@@ -65,37 +65,89 @@ class BlogHandler(webapp2.RequestHandler):
 def render_post(response, post):
     response.out.write('<b>' + post.subject + '</b><br>')
     response.out.write(post.content)
+class BlogFront(BlogHandler):
+        
+    def get(self):
+        uid = self.read_secure_cookie('user_id')
+        liked = Like.query()
+        comments = Comment.query()  
+        posts = greetings = Post.query().order(-Post.created)
+        if uid:
+            key = ndb.Key('User', int(uid), parent=users_key())
+            curr_user = key.get()
+            self.render('front.html', posts=posts, user = curr_user, liked=liked,comments=comments)
+        else:
+            self.render('front.html', posts=posts, liked=liked,comments=comments)       
+    def post(self):
+        uid = self.read_secure_cookie('user_id')
+        self.post_id = self.request.get('post_id')
+        self.like = self.request.get('like')
+        self.unlike = self.request.get('unlike')
+        key = ndb.Key('Post', int(self.post_id), parent=blog_key())
+        post = key.get()
+        if uid:
+            key = ndb.Key('User', int(uid), parent=users_key())
+            curr_user = key.get()
+        if self.like:
+            # when user likes  the post
+            if post.author.name != curr_user.name:
+                post.likes += 1
+                like = Like(post_id=int(self.post_id), author=curr_user)
+                like.put()
+                post.put()
+                time.sleep(0.2)
+            self.redirect("/blog/")
+        elif self.unlike:
+            # when user unlikes the post
+            if post.author.name != curr_user.name:
+                post.likes -= 1
+                like = Like.gql("WHERE post_id = :1 AND author.name = :2",
+                                int(self.post_id), curr_user.name).get()
+                key = like.key
+                key.delete()
+                post.put()
+                time.sleep(0.2)
+            self.redirect("/blog")
+
+        # when user comments in the post  
+        self.comment = self.request.get('comment')
+        if self.comment:
+            if post and self.user:
+                comment = Comment(parent = comments_key(),
+                                  content = self.comment,
+                                  post_id=int(self.post_id), author=curr_user)
+                comment.put()
+                time.sleep(0.2)
+            self.redirect("/blog")  
+
+        # edits the comment of a post
+        self.comment_id = self.request.get('comment_id')
+        self.comment_edit = self.request.get('comment_edit')
+        if self.comment_edit:
+            key = ndb.Key('Comment', int(self.comment_id), parent=comments_key())
+            comment_key = key.get()
+            if comment_key and self.user:
+                if comment_key.author.name == curr_user.name:
+                    comment_key.content = self.comment_edit
+                    comment_key.put()
+                    time.sleep(0.2)
+                self.redirect("/blog")
+
+        # deletes the comment of a post
+        self.delete_comment_id = self.request.get('delete_comment_id')  
+        self.comment_delete = self.request.get('comment_delete')      
+        if self.comment_delete:
+            key = ndb.Key('Comment', int(self.delete_comment_id), parent=comments_key())
+            comment_key = key.get()
+            if comment_key and self.user:
+                if comment_key.author.name == curr_user.name:
+                    key.delete()
+                    time.sleep(0.2)
+                self.redirect("/blog")   
 
 class MainPage(BlogHandler):
   def get(self):
       self.write('Hello, Udacity!')
-
-
-##### user stuff
-def make_salt(length = 5):
-    return ''.join(random.choice(letters) for x in xrange(length))
-
-def make_pw_hash(name, pw, salt = None):
-    if not salt:
-        salt = make_salt()
-    h = hashlib.sha256(name + pw + salt).hexdigest()
-    return '%s,%s' % (salt, h)
-
-def valid_pw(name, password, h):
-    salt = h.split(',')[0]
-    return h == make_pw_hash(name, password, salt)
-
-def users_key(group = 'default'):
-    return ndb.Key('users', group)
-
-##### blog stuff
-
-def blog_key(name = 'default'):
-    return ndb.Key('blogs', name)
-
-def comments_key(name = 'default'):
-    return ndb.Key('comments', name)
-
 
 class BlogFront(BlogHandler):
         
@@ -127,7 +179,7 @@ class BlogFront(BlogHandler):
             curr_user = key.get()
         if self.like:
             # when user likes  the post
-            if self.user:
+            if post.author.name != curr_user.name:
                 post.likes += 1
                 like = Like(post_id=int(self.post_id), author=curr_user)
                 like.put()
@@ -136,7 +188,7 @@ class BlogFront(BlogHandler):
             self.redirect("/blog/")
         elif self.unlike:
             # when user unlikes the post
-            if self.user:
+            if post.author.name != curr_user.name:
                 post.likes -= 1
                 like = Like.gql("WHERE post_id = :1 AND author.name = :2",
                                 int(self.post_id), curr_user.name).get()
@@ -159,18 +211,20 @@ class BlogFront(BlogHandler):
             key = ndb.Key('Comment', int(self.comment_id), parent=comments_key())
             comment_key = key.get()
             if comment_key and self.user:
-                comment_key.content = self.comment_edit
-                comment_key.put()
-                time.sleep(0.2)
-            self.redirect("/blog")
+                if comment_key.author.name == curr_user.name:
+                    comment_key.content = self.comment_edit
+                    comment_key.put()
+                    time.sleep(0.2)
+                self.redirect("/blog")
         if self.comment_delete:
             # deletes the comment of a post
             key = ndb.Key('Comment', int(self.delete_comment_id), parent=comments_key())
             comment_key = key.get()
             if comment_key and self.user:
-                key.delete()
-                time.sleep(0.2)
-            self.redirect("/blog")         
+                if comment_key.author.name == curr_user.name:
+                    key.delete()
+                    time.sleep(0.2)
+                self.redirect("/blog")         
                 
         
 class PostPage(BlogHandler):
@@ -213,13 +267,16 @@ class NewPost(BlogHandler):
 class EditPost(BlogHandler):
     ''' renders the post editing page '''
     def get(self, post_id):
+        uid = self.read_secure_cookie('user_id')
+        key = ndb.Key('User', int(uid), parent=users_key())
+        curr_user = key.get()
         key = ndb.Key('Post', int(post_id), parent=blog_key())
         post = key.get()
-
-        if not post:
+        if post.author.name == curr_user.name:    
+            self.render("editpost.html", post = post)
+        else:
             self.error(404)
-            return
-        self.render("editpost.html", post = post)
+            return    
     def post(self, post_id):
         # edits the post   
         key = ndb.Key('Post', int(post_id), parent=blog_key())

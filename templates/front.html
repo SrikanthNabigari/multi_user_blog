@@ -70,7 +70,7 @@
             
         </div>
       </div>
-
+      {% if user %}
       <div class="comment-toggle" id="{{p.key.id()}}commentsection">
         <hr>
         <ul>
@@ -148,6 +148,7 @@
               {% endfor %}
             </ul>
       </div>
+      {% endif %}
 </div>
 <script>
   $("#comment-edit{{p.key.id()}}count{{count}}").hide();
