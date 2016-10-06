@@ -9,7 +9,7 @@ import webapp2
 import jinja2
 import time
 from google.appengine.ext import ndb
-
+import datastore.py
 template_dir = os.path.join(os.path.dirname(__file__), 'templates')
 jinja_env = jinja2.Environment(loader = jinja2.FileSystemLoader(template_dir),
                                autoescape = True)
@@ -88,64 +88,14 @@ def valid_pw(name, password, h):
 def users_key(group = 'default'):
     return ndb.Key('users', group)
 
-class User(ndb.Model):
-    ''' Users data table '''
-    name = ndb.StringProperty(required = True)
-    pw_hash = ndb.StringProperty(required = True)
-    email = ndb.StringProperty()
-
-    @classmethod
-    def by_id(cls, uid):
-        return User.get_by_id(uid, parent = users_key())
-
-    @classmethod
-    def by_name(cls, name):
-        u = User.gql("WHERE name = '%s'" % name).get()
-        return u
-
-    @classmethod
-    def register(cls, name, pw, email = None):
-        pw_hash = make_pw_hash(name, pw)
-        return User(parent = users_key(),
-                    name = name,
-                    pw_hash = pw_hash,
-                    email = email)
-
-    @classmethod
-    def login(cls, name, pw):
-        u = cls.by_name(name)
-        if u and valid_pw(name, pw, u.pw_hash):
-            return u
-
-
 ##### blog stuff
 
 def blog_key(name = 'default'):
     return ndb.Key('blogs', name)
 
-class Post(ndb.Model):
-    ''' Post data table '''
-    subject = ndb.StringProperty(required = True)
-    content = ndb.TextProperty(required = True)
-    created = ndb.DateTimeProperty(auto_now_add = True)
-    last_modified = ndb.DateTimeProperty(auto_now = True)
-    author = ndb.StructuredProperty(User)
-    likes = ndb.IntegerProperty(default = 0)
-
-
-class Like(ndb.Model):
-    ''' likes data table of a post '''
-    post_id = ndb.IntegerProperty(required=True)
-    author = ndb.StructuredProperty(User)
-
 def comments_key(name = 'default'):
     return ndb.Key('comments', name)
 
-class Comment(ndb.Model):
-    ''' comments data table of a post '''
-    content = ndb.StringProperty(required=True)
-    post_id = ndb.IntegerProperty(required=True)
-    author = ndb.StructuredProperty(User)    
 
 class BlogFront(BlogHandler):
         
@@ -274,26 +224,34 @@ class EditPost(BlogHandler):
         # edits the post   
         key = ndb.Key('Post', int(post_id), parent=blog_key())
         post = key.get()
+        uid = self.read_secure_cookie('user_id')
+        key = ndb.Key('User', int(uid), parent=users_key())
+        curr_user = key.get()
         self.subject = self.request.get('subject')
         self.content = self.request.get('content')
         if self.subject and self.content:
-            if post and self.user:
-                
+            if curr_user.name == post.author.name:
                 post.subject = self.subject
                 post.content = self.content
                 post.put()                
                 self.redirect('/blog/')
-
+            else:
+                self.error(404)
+                return     
 class DeletePost(BlogHandler):
     ''' renders the delete confirmation of a post page'''
     def get(self, post_id):
+        uid = self.read_secure_cookie('user_id')
+        key = ndb.Key('User', int(uid), parent=users_key())
+        curr_user = key.get()
         key = ndb.Key('Post', int(post_id), parent=blog_key())
         post = key.get()
 
-        if not post:
+        if post.author.name == curr_user.name:
+            self.render("deletepost.html", post=post)
+        else:
             self.error(404)
             return
-        self.render("deletepost.html", post=post)
     def post(self, post_id):
         # deletes the post
         uid = self.read_secure_cookie('user_id')
@@ -302,9 +260,12 @@ class DeletePost(BlogHandler):
         key = ndb.Key('Post', int(post_id), parent=blog_key())
         post = key.get()
         if self.request.get('delete'):
-            if post and post.author.name == curr_user.name:
+            if post.author.name == curr_user.name:
                 key.delete()
-            self.redirect("/blog/")
+                self.redirect("/blog/")
+            else:
+                self.error(404)
+                return    
 
 USER_RE = re.compile(r"^[a-zA-Z0-9_-]{3,20}$")
 def valid_username(username):
@@ -394,7 +355,7 @@ class Logout(BlogHandler):
     ''' Logs out the user '''
     def get(self):
         self.logout()
-        self.redirect('/blog')
+        self.redirect('/login')
 
 # Unit 2 HW
 class Rot13(BlogHandler):
