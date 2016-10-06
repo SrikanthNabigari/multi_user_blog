@@ -18,3 +18,9 @@ Below one is the url to the App
 - Editing and deleting of the comments too accessible on the same page
 - Comments can be deleted or edited by the user who commented only
 
+## To run locally
+- Download GoogleAppEngineLauncher for python sdk [here](https://cloud.google.com/appengine/docs/python/download).
+- Clone this repository.
+- Using GoogleAppEnginelauncher open the already existed project which you have cloned.
+- Run the project.
+- open the localhost with port given by the launcher on browser.
