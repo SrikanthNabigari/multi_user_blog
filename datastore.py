@@ -10,6 +10,29 @@ import jinja2
 import time
 from google.appengine.ext import ndb
 
+
+# user stuff
+def make_salt(length = 5):
+    return ''.join(random.choice(letters) for x in xrange(length))
+
+def make_pw_hash(name, pw, salt = None):
+    if not salt:
+        salt = make_salt()
+    h = hashlib.sha256(name + pw + salt).hexdigest()
+    return '%s,%s' % (salt, h)
+
+def valid_pw(name, password, h):
+    salt = h.split(',')[0]
+    return h == make_pw_hash(name, password, salt)
+
+
+def users_key(group = 'default'):
+    return ndb.Key('users', group)
+def blog_key(name = 'default'):
+    return ndb.Key('blogs', name)
+
+def comments_key(name = 'default'):
+    return ndb.Key('comments', name)
 class User(ndb.Model):
     ''' Users data table '''
     name = ndb.StringProperty(required = True)
@@ -46,7 +69,7 @@ class Post(ndb.Model):
     last_modified = ndb.DateTimeProperty(auto_now = True)
     author = ndb.StructuredProperty(User)
     likes = ndb.IntegerProperty(default = 0)
-                
+
 class Like(ndb.Model):
     ''' likes data table of a post '''
     post_id = ndb.IntegerProperty(required=True)
