@@ -14,9 +14,22 @@
   </div>
   <div class="post-edit">
     <ul>
-      <li>{{likes}}<form method="post"><a class="like-button" role="button" name = "post_id" href="#" value = "{{p.key().id()}}">Like</a></form></li>
+      <li>
+        <form method="post">
+          <span>{{p.likes}}</span>
+          
+          {% if user.name and user.name != post.author.name %}
+          {% if not liked %}
+          <a class="like-button" role="button" name = "like" href="#">Like</a>
+          <input type="hidden" name="post_id" value="p.key().id()">
+          {% else %}
+          <a class="like-button" role="button" name = "like" href="#">Like</a>
+          {% endif %}
+          {% endif %}
+        </form>
+      </li>
       <li><a class="comment-button" role="button" href="#">Comment</a></li>
-      <li><a class="edit-button" role="button" href="#">Edit</a></li>
+      <li><a class="edit-button" role="button" href="#">Edit</a></li> 
     </ul>
   </div>
 </div>

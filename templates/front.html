@@ -1,10 +1,163 @@
 {% extends "base.html" %}
-
+{% block newpost %}
+    <a href="/blog/newpost">
+      <img src="/img/plus-sign.svg" alt="New Post">
+    </a>
+{% endblock %}
 {% block content %}
-
+{% set count = 1 %}
   {% for p in posts %}
-    {{ p.render() | safe }}
+    <div class="post">
+      <div class="post-heading">
+        <div class="post-title">
+          <h1>{{p.subject}}</h1>
+        </div>
+        <div class="post-date">
+          <span>{{p.created.strftime("%b %d, %Y")}}</span>
+        </div>
+        {% if p.author.name == user.name %}
+        <div class="post-options">
+          <ul>
+              <li><a href='/blog/edit/{{p.key.id()}}'><span class="glyphicon glyphicon-pencil">Edit</span></a></li>
+              <li><a href = '/blog/delete/{{p.key.id()}}'><span class="glyphicon glyphicon-trash">Delete</span></a></li>
+          </ul>
+        </div>
+        {% endif %}
+      </div>
+
+      <div class="post-content">
+        <p>
+        {{p.content.replace('\n', '<br>') | safe}}
+        </p>
+      </div>
+      <div class="post-votes">     
+        <div class="like-status vote">   
+            {% if user.name and user.name != p.author.name %}
+                {% if p.likes == 0 %}
+                <form method="post">
+                <input type="hidden" name="post_id" value="{{p.key.id()}}">
+                <input type="hidden" name="like" value="like">
+                <button class="btn btn-default" type="submit">Like</button>
+                </form>  
+                {% endif %}
+                  
+                  <form method="post">
+                    {% if not p.likes == 0 %}
+                    <span>{{p.likes}}</span>
+                    {% endif %}
+                    <input type="hidden" name="post_id" value="{{p.key.id()}}">
+                    {% for l in liked %}
+                    {% if not l.post_id == p.key.id() and not l.author.name == user.name %}
+                    <input type="hidden" name="like" value="like">
+                    <button class="btn btn-default" type="submit">Like</button>
+                    {% endif %}
+                    {% endfor%}
+                    {% for l in liked %}
+                    {% if l.post_id == p.key.id() and l.author.name == user.name %}
+                    <input type="hidden" name="unlike" value="like">
+                    <button class="btn btn-default" type="submit">Unlike</button>
+                    {% endif %}
+                    {% endfor %}
+                  </form>
+                  {% endif %}
+            
+          
+        </div>   
+          <div class="comment-button vote" >
+            <button class="btn btn-default" id="{{p.key.id()}}commentbutton" type="button" >Comments
+              <span></span>
+            </button>
+            
+        </div>
+      </div>
+
+      <div class="comment-toggle" id="{{p.key.id()}}commentsection">
+        <hr>
+        <ul>
+              <li class="comment-post">
+                <form class="post-comment form-horizontal" method="post">
+                  
+                      <input type="hidden" name="post_id" value="{{p.key.id()}}">
+                      <textarea name="comment" class="form-control col-sm-12" rows="2" cols="20" placeholder="Comment"></textarea>
+                      <button type="submit" class="btn btn-default col=sm-2">Submit</button>
+                  
+                </form>
+              </li>
+              <hr>
+              <li class="comment-edit" id="comment-edit{{p.key.id()}}count{{ count }}">
+                <form class="form-horizontal" method="post">
+                      <input type="hidden" name="post_id" value="{{p.key.id()}}">
+                      <input type="hidden" name="comment_id" id="comment_id{{p.key.id()}}count{{count}}">
+                      <textarea name="comment_edit" class="form-control col-sm-12" id="comment_edit{{p.key.id()}}count{{count}}" rows="2" cols="20" ></textarea>
+                      <button type="submit" class="btn btn-default col-sm-1">Save</button>              
+                </form>
+                <button class="btn btn-default col-sm-1" id="comment-edit-cancel{{p.key.id()}}">Cancel</button>
+                <hr>
+              </li>
+              {% for comment in comments %}
+                {% if comment.post_id == p.key.id() %}
+                <li class="comment-list" id="comment{{comment.key.id()}}">
+                  <div class="comment-section row">
+                    <div class="comment-box col-md-10">
+                      <p>{{ comment.content }}</p>
+                    </div>  
+                  {% if comment.author.name == user.name %}
+                    <div class="comment-box comment-options col-md-2 text-right" id="commentedit{{comment.key.id}}">
+                      <div class="comment-option option-edit">
+                          <button id="{{comment.key.id()}}edit"><span class="glyphicon glyphicon-pencil"></span></button>
+                      </div>
+                      <div class="comment-option option-delete">
+                          <form class="form-horizontal" method="post">
+                              <input type="hidden" name="post_id" value="{{p.key.id()}}">
+                              <input type="hidden" name="delete_comment_id" id="comment_id{{comment.key.id()}}">
+                              <input type="hidden" name="comment_delete" id="comment_delete{{comment.key.id()}}" class="form-control">
+                              <button type="submit" id="{{comment.key.id()}}delete" class="btn btn-default"><span class="glyphicon glyphicon-remove"></span></button>              
+                          </form>
+                      </div>
+                    </div>
+                  {% endif %}
+                  </div>
+                  <hr>                           
+                </li>
+                
+                
+                {% endif %}
+                
+                <script>
+                      $("#comment-edit{{p.key.id()}}count{{count}}").hide();
+                      
+
+                      $("#{{comment.key.id()}}edit").click(function(){
+                        $("#comment{{comment.key.id()}}").hide();
+                        $('#comment-edit{{comment.post_id}}count{{count}}').show();
+                        $("#comment_edit{{p.key.id()}}count{{count}}").val("{{comment.content}}");
+                        $("#comment_id{{p.key.id()}}count{{count}}").val("{{comment.key.id()}}");
+                      });
+                      
+                      $("#comment-edit-cancel{{p.key.id()}}").click(function(){
+                        $("#comment{{comment.key.id()}}").show();
+                        $("#comment-edit{{p.key.id()}}count{{count}}").hide();
+                      });
+
+                      $("#{{comment.key.id()}}delete").click(function(){
+                        $("#comment_delete{{comment.key.id()}}").val("{{comment.content}}");
+                        $("#comment_id{{comment.key.id()}}").val("{{comment.key.id()}}");
+                      });
+
+                </script>
+              {% endfor %}
+            </ul>
+      </div>
+</div>
+<script>
+  $("#comment-edit{{p.key.id()}}count{{count}}").hide();
+  $("#{{p.key.id()}}commentsection").toggle();
+  $("#{{p.key.id()}}commentbutton").click(function(){
+    $("#{{p.key.id()}}commentsection").toggle();
+});    
+</script>
     <br><br>
+    {% set count = count + 1 %}
   {% endfor %}
 
 {% endblock %}

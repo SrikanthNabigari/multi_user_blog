@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+  {% for p in posts %}
+    <div class="post">
+  <div class="post-heading">
+    <div class="post-title">
+      {{p.subject}}
+    </div>
+
+    <div class="post-date">
+      {{p.created.strftime("%b %d, %Y")}}
+    </div>
+    {% if p.author.name == user.name %}
+    <div class="post-options dropdown">
+       <button class="btn btn-default dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+          <span class="glyphicon glyphicon-chevron-down"></span>
+       </button>
+       <ul class="dropdown-menu pull-right" aria-labelledby="dropdownMenu1">
+          <li><a href='/blog/edit/{{p.key.id()}}'>Edit</a></li>
+          <li><a href = '/blog/delete/{{p.key.id()}}'>Delete</a></li>
+       </ul>
+     </div>
+     {% endif %}
+  </div>
+
+  <div class="post-content">
+    {{p.content.replace('\n', '<br>') | safe}}
+  </div>
+  <div class="post-edit">     
+    <div class="like-status">   
+        {% if user.name and user.name != p.author.name %}
+        {% if p.likes == 0 %}
+        <form method="post">
+        <input type="hidden" name="post_id" value="{{p.key.id()}}">
+        <input type="hidden" name="like" value="like">
+        <button type="submit">Like</button>
+        </form>  
+              {% endif %}
+              {% if not p.likes == 0 %}
+              <form method="post">
+                <span>{{p.likes}}</span>
+                {% endif %}
+                <input type="hidden" name="post_id" value="{{p.key.id()}}">
+                {% for l in liked %}
+                {% if not l.post_id == p.key.id() and not l.author.name == user.name %}
+                <input type="hidden" name="like" value="like">
+                <button type="submit">Like</button>
+                {% endif %}
+                {% endfor%}
+                {% for l in liked %}
+                {% if l.post_id == p.key.id() and l.author.name == user.name %}
+                <input type="hidden" name="unlike" value="like">
+                <button type="submit">Unlike</button>
+                {% endif %}
+                {% endfor %}
+              </form>
+              {% endif %}
+        
+      
+    </div>   
+      <div class="dropdown comment-section">
+        <button class="dropdown-toggle" id="menu1" type="button" data-toggle="dropdown">Comments
+          <span></span>
+        </button>
+        <ul class="dropdown-menu" role="menu" aria-labelledby="menu1">
+          <li>
+            <form class="form-horizontal" method="post">
+               
+                  <input type="hidden" name="post_id" value="{{p.key.id()}}">
+                  <input type="text" name="comment" class="form-control col-sm-10" placeholder="Comment">
+                  <button type="submit" class="btn btn-default col=sm-2">Submit</button>
+              
+            </form>
+          </li>
+          <li class="divider"></li>
+          {% for comment in comments %}
+            {% if comment.post_id == p.key.id() %}
+            <li>
+              <span id="comment{{comment.key.id}}">{{ comment.content }}</span>
+              <form class="form-horizontal" id="c{{comment.key.id()}}e" method="post">
+               
+                  <input type="hidden" name="post_id" value="{{p.key.id()}}">
+                  <input type="text" name="comment" class="form-control col-sm-10" value="{{comment.content}}">
+                  <button type="submit" class="btn btn-default col=sm-2">Submit</button>
+              
+            </form>
+              {% if comment.author.name == user.name %}
+                <div class="comment-options" id="commentedit{{comment.key.id}}">
+                  <a href="#" id="{{comment.key.id}}edit"><span class="glyphicon glyphicon-pencil"></span></a>
+                  <a href="#"><span class="glyphicon glyphicon-remove"></span></a>
+                </div>
+               {% endif %}
+            </li>
+            <li class="divider"></li>
+            {% endif %}
+            <script>
+                  $("#c{{comment.key.id()}}e").hide();
+                  $("#{{comment.key.id()}}edit").click(function(){
+                    $("#comment{{comment.key.id}}").hide();
+                  });
+                  $("#{{comment.key.id()}}edit").click(function(){
+                    $("c{{comment.key.id()}}e}").show();
+                });
+
+            </script>
+          {% endfor %}
+        </ul>
+     </div>
+  </div>
+</div>
+
+    <br><br>
+  {% endfor %}
+
+{% endblock %}

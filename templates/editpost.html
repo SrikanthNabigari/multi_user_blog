@@ -7,16 +7,17 @@
       <h2>New Post</h2>  
       <label>
         <div>subject</div>
-        <input type="text" name="subject" value="{{subject}}">
+        <input type="text" name="subject" value="{{post.subject}}">
       </label>
 
       <label>
         <div>blog</div>
-        <textarea name="content" cols="50" rows="10" class="post-textarea">{{content}}</textarea>
+        <textarea name="content" cols="50" rows="10" class="post-textarea">{{post.content}}</textarea>
       </label>
 
       <div class="error">{{error}}</div>
 
       <input type="submit">
     </form>
+    <button onclick="/blog/">Cancel</button>
 {% endblock %}
