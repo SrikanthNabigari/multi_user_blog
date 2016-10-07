@@ -206,6 +206,15 @@ li{
     margin-left:-15px;
     margin-right: -15px;
 }
+.show-votes{
+    height: 30px;
+}
+.show-votes {
+    padding-top: 20px;
+}
+.post-votes{
+    margin-top: -15px
+}
 @media screen and (max-width:900px){
     .container{
         width: 100%;
@@ -218,3 +227,4 @@ li{
         height: 100%;
     }
 }
+

@@ -1,9 +1,11 @@
 {% extends "base.html" %}
+{% if user %}
 {% block newpost %}
     <a href="/blog/newpost">
       <img src="/img/plus-sign.svg" alt="New Post">
     </a>
 {% endblock %}
+{% endif %}
 {% block content %}
 {% set count = 1 %}
   {% for p in posts %}
@@ -30,6 +32,10 @@
         {{p.content.replace('\n', '<br>') | safe}}
         </p>
       </div>
+      <div class="show-votes">
+        <span class="glyphicon glyphicon-thumbs-up">{{p.likes}}</span>
+      </div>
+      <hr>
       <div class="post-votes">     
         <div class="like-status vote">   
             {% if user.name and user.name != p.author.name %}
@@ -42,9 +48,6 @@
                 {% endif %}
                   
                   <form method="post">
-                    {% if not p.likes == 0 %}
-                    <span>{{p.likes}}</span>
-                    {% endif %}
                     <input type="hidden" name="post_id" value="{{p.key.id()}}">
                     {% for l in liked %}
                     {% if not l.post_id == p.key.id() and not l.author.name == user.name %}
@@ -60,7 +63,9 @@
                     {% endfor %}
                   </form>
                   {% endif %}
-            
+            {% if not user %}
+              <a href="/login"><button class="btn btn-default" type="submit">Like</button></a>
+            {% endif %} 
           
         </div>   
           <div class="comment-button vote" >
@@ -70,7 +75,6 @@
             
         </div>
       </div>
-      {% if user %}
       <div class="comment-toggle" id="{{p.key.id()}}commentsection">
         <hr>
         <ul>
@@ -80,10 +84,10 @@
                       <input type="hidden" name="post_id" value="{{p.key.id()}}">
                       <textarea name="comment" class="form-control col-sm-12" rows="2" cols="20" placeholder="Comment"></textarea>
                       <button type="submit" class="btn btn-default col=sm-2">Submit</button>
-                  
                 </form>
+                <hr>
               </li>
-              <hr>
+              
               <li class="comment-edit" id="comment-edit{{p.key.id()}}count{{ count }}">
                 <form class="form-horizontal" method="post">
                       <input type="hidden" name="post_id" value="{{p.key.id()}}">
@@ -148,8 +152,12 @@
               {% endfor %}
             </ul>
       </div>
-      {% endif %}
 </div>
+{% if not user %}
+<script>
+  $(".comment-post").hide();s
+</script>
+{% endif %}
 <script>
   $("#comment-edit{{p.key.id()}}count{{count}}").hide();
   $("#{{p.key.id()}}commentsection").toggle();
