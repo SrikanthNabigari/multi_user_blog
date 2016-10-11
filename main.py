@@ -77,7 +77,7 @@ class BlogFront(BlogHandler):
             curr_user = key.get()
             self.render('front.html', posts=posts, user = curr_user, liked=liked,comments=comments)
         else:
-            self.render('front.html', posts=posts, liked=liked,comments=comments)       
+            self.render('front.html', posts=posts, liked=liked, comments=comments)       
     def post(self):
         uid = self.read_secure_cookie('user_id')
         self.post_id = self.request.get('post_id')
@@ -97,7 +97,7 @@ class BlogFront(BlogHandler):
                 post.put()
                 time.sleep(0.2)
             self.redirect("/blog/")
-        elif self.unlike:
+        if self.unlike:
             # when user unlikes the post
             if post.author.name != curr_user.name:
                 post.likes -= 1

@@ -39,30 +39,26 @@
       <div class="post-votes">     
         <div class="like-status vote">   
             {% if user.name and user.name != p.author.name %}
-                {% if p.likes == 0 %}
-                <form method="post">
-                <input type="hidden" name="post_id" value="{{p.key.id()}}">
-                <input type="hidden" name="like" value="like">
-                <button class="btn btn-default" type="submit">Like</button>
-                </form>  
-                {% endif %}
-                  
-                  <form method="post">
-                    <input type="hidden" name="post_id" value="{{p.key.id()}}">
                     {% for l in liked %}
-                    {% if not l.post_id == p.key.id() and not l.author.name == user.name %}
+                    {% if not l.post_id == p.key.id() and not l.author.name == user.name  %}
+                    <form method="post" class="{{p.key.id()}}-like-{{count}}">
+                    <input type="hidden" name="post_id" value="{{p.key.id()}}">
                     <input type="hidden" name="like" value="like">
-                    <button class="btn btn-default" type="submit">Like</button>
+                    <button class="btn btn-default" id="{{p.key.id()}}-like-{{count}}" type="submit">Like</button>
+                    </form>
                     {% endif %}
                     {% endfor%}
+                  
                     {% for l in liked %}
                     {% if l.post_id == p.key.id() and l.author.name == user.name %}
-                    <input type="hidden" name="unlike" value="like">
-                    <button class="btn btn-default" type="submit">Unlike</button>
+                    <form method="post" class="{{p.key.id()}}-unlike-{{count}}">
+                    <input type="hidden" name="post_id" value="{{p.key.id()}}">
+                    <input type="hidden" name="unlike" value="unlike">
+                    <button class="btn btn-default"  id="{{p.key.id()}}-unlike-{{count}}" type="submit">Unlike</button>
+                    </form>
                     {% endif %}
                     {% endfor %}
-                  </form>
-                  {% endif %}
+               {% endif %}     
             {% if not user %}
               <a href="/login"><button class="btn btn-default" type="submit">Like</button></a>
             {% endif %} 
@@ -164,6 +160,13 @@
   $("#{{p.key.id()}}commentbutton").click(function(){
     $("#{{p.key.id()}}commentsection").toggle();
 });    
+</script>
+<script>
+  if($('#{{p.key.id()}}-unlike-{{count}}').length){
+   $('#{{p.key.id()}}-like-{{count}}').hide();
+}
+$('.{{p.key.id()}}-like-{{count}}').slice(1).remove();
+$('.{{p.key.id()}}-unlike-{{count}}').slice(1).remove();
 </script>
     <br><br>
     {% set count = count + 1 %}
